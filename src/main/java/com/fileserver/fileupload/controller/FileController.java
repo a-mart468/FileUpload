@@ -35,6 +35,15 @@ public class FileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(metadata);
     }
 
+
+    @PostMapping("/batch")
+    public ResponseEntity<List<FileMetadata>> uploadFiles(@RequestParam(value = "files", required = false) List<MultipartFile> files) {
+
+        List<FileMetadata> metadata = fileStorageService.storeAll(files);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(metadata);
+    }
+
     @GetMapping
     public ResponseEntity<List<FileMetadata>> getAllFiles() {
         return ResponseEntity.ok(fileStorageService.getAllFiles());

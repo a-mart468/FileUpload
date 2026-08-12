@@ -51,20 +51,49 @@ public class FileStorageService {
 
     public FileMetadata store(MultipartFile file) {
         String filename = validate(file);
+
+        return storeValidated(file, filename);
+    }
+
+    public List<FileMetadata> storeAll(List<MultipartFile> uploadedFiles) {
+        if (uploadedFiles == null || uploadedFiles.isEmpty()) {
+            throw new FileValidationException("EMPTY_BATCH", "At least one file is required.", Map.of());
+        }
+
+
+        List<ValidatedFile> validatedFiles = uploadedFiles.stream().map(file -> new ValidatedFile(file, validate(file))).toList();
+
+        List<FileMetadata> storedFiles = new ArrayList<>();
+
+        try {
+            for (ValidatedFile validatedFile : validatedFiles) {
+                FileMetadata metadata = storeValidated(validatedFile.file(), validatedFile.filename());
+
+                storedFiles.add(metadata);
+            }
+
+            return List.copyOf(storedFiles);
+        } catch (RuntimeException exception) {
+            rollbackStoredFiles(storedFiles, exception);
+            throw exception;
+        }
+    }
+
+    private FileMetadata storeValidated(MultipartFile file, String filename) {
+
         String id = UUID.randomUUID().toString();
         Path targetPath = uploadDirectory.resolve(id);
 
         try (InputStream inputStream = file.getInputStream()) {
-            Files.copy(
-                    inputStream,
-                    targetPath,
-                    StandardCopyOption.REPLACE_EXISTING
+            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING
             );
         } catch (IOException exception) {
-            throw new IllegalStateException(
-                    "Could not store file.",
-                    exception
-            );
+            try {Files.deleteIfExists(targetPath);
+            } catch (IOException cleanupException) {
+                exception.addSuppressed(cleanupException);
+            }
+
+            throw new IllegalStateException("Could not store file.", exception);
         }
 
         FileMetadata metadata = new FileMetadata(
@@ -74,8 +103,32 @@ public class FileStorageService {
                 file.getContentType(),
                 Instant.now()
         );
+
         files.put(id, metadata);
+
         return metadata;
+    }
+
+    private void rollbackStoredFiles(
+            List<FileMetadata> storedFiles,
+            RuntimeException originalException) {
+
+        for (FileMetadata metadata : storedFiles) {
+            files.remove(metadata.id());
+
+            try {
+                Files.deleteIfExists(
+                        uploadDirectory.resolve(metadata.id())
+                );
+            } catch (IOException cleanupException) {
+                originalException.addSuppressed(cleanupException);
+            }
+        }
+    }
+
+    private record ValidatedFile(
+            MultipartFile file,
+            String filename) {
     }
 
     public List<FileMetadata> getAllFiles(){
