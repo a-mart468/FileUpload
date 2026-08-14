@@ -1,6 +1,6 @@
 package com.fileserver.fileupload.controller;
 
-import com.fileserver.fileupload.model.FileMetadata;
+import com.fileserver.fileupload.entity.FileMetadata;
 import com.fileserver.fileupload.service.FileStorageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 
 @RestController
