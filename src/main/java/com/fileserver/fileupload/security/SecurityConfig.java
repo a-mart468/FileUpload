@@ -71,10 +71,11 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable()).formLogin(form -> form.disable()).httpBasic(basic -> basic.disable()).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(securityFailureHandler).accessDeniedHandler(securityFailureHandler))
-                .authorizeHttpRequests(authorize -> authorize.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/files/batch").hasAuthority("ROLE_BATCH_USER")
-                        .requestMatchers("/api/files", "/api/files/**").hasAuthority("ROLE_SIMPLE_USER")
-                        .anyRequest().denyAll()).oauth2ResourceServer(oauth2 -> oauth2.authenticationEntryPoint(securityFailureHandler)
+                        .requestMatchers("/api/files", "/api/files/**").hasAuthority("ROLE_SIMPLE_USER").anyRequest().denyAll()).oauth2ResourceServer(oauth2 -> oauth2.authenticationEntryPoint(securityFailureHandler)
                         .accessDeniedHandler(securityFailureHandler).jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)));
 
         return http.build();

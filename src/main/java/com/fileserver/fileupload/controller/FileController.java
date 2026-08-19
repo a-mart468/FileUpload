@@ -1,5 +1,6 @@
 package com.fileserver.fileupload.controller;
 
+import com.fileserver.fileupload.config.OpenApiConfig;
 import com.fileserver.fileupload.entity.FileMetadata;
 import com.fileserver.fileupload.service.FileStorageService;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,8 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.nio.charset.StandardCharsets;
 
@@ -19,6 +22,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/files")
+@Tag(name = "Files", description = "File upload, batch upload, list and download operations")
+@SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEME_NAME)
 public class FileController {
 
     private  final FileStorageService fileStorageService;
@@ -27,16 +32,18 @@ public class FileController {
         this.fileStorageService = fileStorageService;
     }
 
-    @PostMapping
-    public ResponseEntity<FileMetadata> uploadFile(@RequestParam("file") MultipartFile file) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FileMetadata> uploadFile(@RequestPart("file") MultipartFile file) {
         FileMetadata metadata = fileStorageService.store(file);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(metadata);
     }
 
 
-    @PostMapping("/batch")
-    public ResponseEntity<List<FileMetadata>> uploadFiles(@RequestParam(value = "files", required = false) List<MultipartFile> files) {
-
+    @PostMapping(value = "/batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<FileMetadata>> uploadFiles(
+            @RequestPart(value = "files", required = false)
+            List<MultipartFile> files) {
         List<FileMetadata> metadata = fileStorageService.storeAll(files);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(metadata);
