@@ -1,0 +1,15 @@
+@startuml
+
+!include <C4/C4_Context>
+
+title System Context Diagram - File Upload System
+
+Person(user, "API User", "Uses file operations allowed by the assigned role.")
+
+System(fileUploadSystem, "File Upload System", "Provides secure role-based file operations through a REST API.",$link="02-container.puml")
+
+Rel(user, fileUploadSystem, "Logs in and performs authorized file operations", "HTTP/REST with JWT")
+
+SHOW_LEGEND()
+
+@enduml

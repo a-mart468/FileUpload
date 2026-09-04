@@ -1,0 +1,79 @@
+@startuml
+title Code View - Security / Authentication
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+
+package "Security / Authentication Component" {
+
+    class AuthController {
+        - authenticationManager : AuthenticationManager
+        - jwtService : JwtService
+        + login(request : LoginRequest) : LoginResponse
+    }
+
+    class LoginRequest {
+        - username : String
+        - password : String
+    }
+
+    class LoginResponse {
+        - accessToken : String
+    }
+
+    class SecurityConfig {
+        + passwordEncoder() : PasswordEncoder
+        + authenticationManager() : AuthenticationManager
+        + securityFilterChain() : SecurityFilterChain
+    }
+
+    class JwtService {
+        - jwtEncoder : JwtEncoder
+        - jwtDecoder : JwtDecoder
+        + generateToken(authentication : Authentication) : String
+    }
+
+    class CustomUserDetailsService {
+        - appUserRepository : AppUserRepository
+        + loadUserByUsername(username : String) : UserDetails
+    }
+
+    class SecurityFailureHandler {
+        + commence(request, response, exception) : void
+    }
+
+    interface AppUserRepository {
+        + findByUsername(username : String) : Optional<AppUser>
+    }
+
+    class AppUser {
+        - id : Long
+        - username : String
+        - password : String
+        - enabled : boolean
+        - roles : Set<Role>
+    }
+
+    class Role {
+        - id : Long
+        - name : String
+    }
+}
+
+AuthController --> LoginRequest : receives
+AuthController --> LoginResponse : returns
+AuthController --> JwtService : generates token using
+
+SecurityConfig --> CustomUserDetailsService : uses
+SecurityConfig --> SecurityFailureHandler : configures
+SecurityConfig --> JwtService : configures JWT
+
+CustomUserDetailsService --> AppUserRepository : loads user using
+AppUserRepository --> AppUser : returns
+
+AppUser --> Role : has roles
+
+JwtService ..> LoginResponse : token returned in
+
+@enduml
