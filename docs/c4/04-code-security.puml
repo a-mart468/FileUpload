@@ -1,0 +1,121 @@
+@startuml
+
+
+title Code View - Security / Authentication
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam roundcorner 8
+skinparam classAttributeIconSize 0
+skinparam nodesep 50
+skinparam ranksep 60
+skinparam padding 8
+
+skinparam class{
+ BackgroundColor #F8F9FA
+ BorderColor #495057
+ ArrowColor #495057
+ FontColor #212529
+ FontSize 13
+ BorderThickness 1
+}
+
+skinparam package{
+ BackgroundColor #FFFFFF
+ BorderColor #6C757D
+ FontColor #2112529
+}
+
+package "Security / Authentication Component" {
+
+    class AuthController {
+        - authenticationManager : AuthenticationManager
+        - jwtService : JwtService
+        + login(request : LoginRequest) : LoginResponse
+    }
+
+    class LoginRequest {
+        - username : String
+        - password : String
+    }
+
+    class LoginResponse {
+        - accessToken : String
+    }
+
+    class SecurityConfig {
+        + passwordEncoder() : PasswordEncoder
+        + authenticationManager(userDetailsService, passwordEncoder) : AuthenticationManager
+        + jwtSecretKey(base64Secret) : SecretKey
+        + jwtEncoder(secretKey) : JwtEncoder
+        + jwtDecoder(secretKey) : JwtDecoder
+        + securityFilterChain(http, securityFailureHandler) : SecurityFilterChain
+    }
+
+    class JwtService {
+        - jwtEncoder : JwtEncoder
+        - expirationSeconds : long
+        + generateToken(authentication : Authentication) : String
+    }
+
+    class CustomUserDetailsService {
+        - appUserRepository : AppUserRepository
+        + loadUserByUsername(username : String) : UserDetails
+    }
+
+    class SecurityFailureHandler {
+        - activityLogService : ActivityLogService
+        + commence(request, response, exception) : void
+        + handle(request, response, exception) : void
+    }
+
+    class ActivityLogService {
+      - activityLogRepository : ActivityLogRepository
+      + log(...) : void
+      + logFailure(...) : void
+      - saveLog(...) : void
+    }
+
+    interface ActivityLogRepository{
+      + save(activityLog : ActivityLog)
+    }
+
+    interface AppUserRepository {
+        + findByUsername(username : String) : Optional<AppUser>
+    }
+
+    class AppUser {
+        - id : Long
+        - username : String
+        - password : String
+        - enabled : boolean
+        - roles : Set<Role>
+    }
+
+    class Role {
+        - id : Long
+        - name : String
+    }
+}
+
+AuthController --> LoginRequest : receives
+AuthController --> LoginResponse : returns
+AuthController --> JwtService : generates token using
+
+SecurityConfig ..> AuthController : provides AuthenticationManager
+SecurityConfig --> CustomUserDetailsService : uses UserDetailsService
+SecurityConfig --> SecurityFailureHandler : configures
+
+CustomUserDetailsService --> AppUserRepository : loads user using
+AppUserRepository --> AppUser : returns
+
+AppUser --> Role : has roles
+
+JwtService ..> LoginResponse : token returned in
+
+SecurityFailureHandler --> ActivityLogService : logs failures
+ActivityLogService --> ActivityLogRepository : saves logs
+
+
+@enduml

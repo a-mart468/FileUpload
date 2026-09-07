@@ -16,9 +16,12 @@ import com.fileserver.fileupload.entity.ActivityAction;
 import com.fileserver.fileupload.service.ActivityLogService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "User authentication and JWT generation")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -31,6 +34,7 @@ public class AuthController {
         this.activityLogService = activityLogService;
     }
 
+    @Operation(summary = "Login", description = "Validates username and password and returns a JWT access token")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         Authentication authenticationRequest = UsernamePasswordAuthenticationToken.unauthenticated(request.getUsername(), request.getPassword());

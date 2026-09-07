@@ -1,0 +1,40 @@
+@startuml
+
+!include <C4/C4_Container>
+
+title Container Diagram - File Upload System
+
+LAYOUT_TOP_DOWN()
+
+skinparam linetype ortho
+skinparam shadowing false
+skinparam roundcorner 10
+
+skinparam nodesep 150
+skinparam ranksep 150
+skinparam padding 10
+
+skinparam DefaultFontSize 13
+skinparam DefaultTextAlignmentCenter center
+
+skinparam Arrow{
+  Thickness 1
+}
+
+
+Person(user, "API User", "Uses curl, Postman, or a browser to interact with the File Upload API.")
+
+System_Boundary(fileUploadSystem,"File Upload System"){
+Container(fileUploadApi, "File Upload API", "Java / Spring Boot", "Authenticates users and handles secure operations.",$link="03-component.puml")
+ContainerDb(fileStorage, "File Storage", "Local file system", "Stores uploaded file contents in the uploads directory using UUID-based names.")
+ContainerDb(database,"Application Database","MySQL","Stores users and roles plus file metadata and activity logs.")
+}
+
+Rel_D(user, fileUploadApi, "Logs in and performs authorized file operations", "HTTP/REST with JWT")
+Rel_D(fileUploadApi, fileStorage, "Writes and reads file contents", "Java NIO")
+Rel_D(fileUploadApi, database, "Reads and writes application data","Spring Data JPA / Liquibase")
+
+SHOW_LEGEND()
+
+
+@enduml
