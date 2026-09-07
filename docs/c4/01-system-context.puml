@@ -4,6 +4,21 @@
 
 title System Context Diagram - File Upload System
 
+skinparam linetype ortho
+skinparam shadowing false
+skinparam roundcorner 10
+
+skinparam nodesep 150
+skinparam ranksep 150
+skinparam padding 10
+
+skinparam DefaultFontSize 13
+skinparam DefaultTextAlignmentCenter center
+
+skinparam Arrow{
+  Thickness 1
+}
+
 Person(user, "API User", "Uses file operations allowed by the assigned role.")
 
 System(fileUploadSystem, "File Upload System", "Provides secure role-based file operations through a REST API.",$link="02-container.puml")
